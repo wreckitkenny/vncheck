@@ -1,0 +1,96 @@
+image:
+  repository: registry.vnpaytest.vn/vnpay-ocp/nds/cms2cloud/cms2cloud
+  tag: t-0babfd20      # REQUIRED
+  # pullPolicy: IfNotPresent
+  # pullSecrets: []
+
+########## App settings #####################
+app:
+  kind: Deployment
+  replicas: 2
+  # command: ["/bin/bash"]
+  # args: ["-c", "echo \" Hello from $(hostname)\" > index.html; python -m SimpleHTTPServer 8888"]
+  port: 10080
+  annotations: {}
+  podAnnotations: {}
+  args: []
+  healthcheck:
+    liveness:
+      periodSeconds: 5
+      timeoutSeconds: 10
+      httpGet:
+        path: "/api/health-check"
+        port: http
+    readiness:
+      periodSeconds: 5
+      timeoutSeconds: 10
+      httpGet:
+        path: "/api/health-check"
+        port: http
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "test"
+  - name: PORT
+    value: "8080"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+########## Networking ##########
+service:
+  type: ClusterIP
+  port: 10080
+  annotations: {}
+    ## In order to get prometheus to scrape service
+    # prometheus.io/scrape: "true"
+    # prometheus.io/path: /metrics
+    # prometheus.io/port: "8080"
+
+autoscaling:
+  enabled: false
+  min: 3
+  max: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+  - host: cns2cloud.vnpaytest.vn
+    paths: [/]
+#   tls: []
+  # - secretName: example.com-tls
+  #   hosts:
+  #   - example.com
+
+########## Observation ##########
+serviceMonitor:
+  enabled: false
+  additionalLabels: {}
+  interval: 30s
+  honorLabels: false
+  relabellings: {}
+
+#########  ENV   ############
+# env:
+#   DB_HOST: {{ requiredEnv "VNPAY_WEBSITE_DATABASE_HOST" | quote }}
+#   DB_USER: {{ requiredEnv "VNPAY_WEBSITE_DATABASE_USERNAME" | quote }}
+#   DB_PASS: {{ requiredEnv "VNPAY_WEBSITE_DATABASE_PASSWORD" | quote }}
+#   DB_NAME: {{ requiredEnv "VNPAY_WEBSITE_DATABASE_NAME" | quote }}
+
+#   URL_MMS_ENDPOINT: {{ requiredEnv "VNPAY_WEBSITE_URL_MMS_ENDPOINT" | quote }}
+#   URL_SMS_ENDPOINT_ENDPOINT: {{ requiredEnv "VNPAY_WEBSITE_URL_MMS_ENDPOINT" | quote }}

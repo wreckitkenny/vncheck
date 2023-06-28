@@ -1,0 +1,106 @@
+image:
+  repository: registry.vnpay.vn/vnpay-ocp/dvtt/vnins/vnins-main-api
+  # t= test, m= master, d= dev
+  # master enviroment syntax : m-verion
+  tag: t-5de18f16
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+########## App settings ##########
+app:
+  kind: Deployment
+  # số lượng pod run
+  replicas: 1
+  port: 9662
+  prometheusScrapePort: 9900
+  annotations: {}
+  podAnnotations: {}
+  healthcheck:
+    liveness:
+      periodSeconds: 10
+      timeoutSeconds: 20
+      initialDelaySeconds: 30
+      httpGet:
+        path: "/healthz"
+        port: http
+    readiness:
+      periodSeconds: 10
+      timeoutSeconds: 20
+      initialDelaySeconds: 30
+      httpGet:
+        path: "/healthz"
+        port: http
+
+  args: ["java", "-jar", "-Xms256m", "-Xmx1G", "vnins-main-api.jar"]
+
+resources:
+  # Tài nguyên tối đa mà POD có thể được sử dụng
+  limits:
+    cpu: 2
+    memory: 1Gi
+  # tài nguyên tối thiểu để chạy được POD
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+env:
+  - name: PROVIDER_BAO_VIET_URL
+    value: "http://vnins-test-provider-baoviet:9665"
+  - name: REDIS_HOST
+    value: "10.22.7.35"
+  - name: REDIS_PORT
+    value: "6379"
+  - name: REDIS_PASSWORD
+    value: "&$AJ1f671#9%oafnz@"
+  - name: REDIS_DATABASE
+    value: "11"
+  - name: SNOW_FLAKE_MULTI
+    value: "true"
+
+
+
+########## Networking ###########
+service:
+  type: ClusterIP
+  port: 9662
+  annotations: {}
+
+autoscaling:
+  enabled: false
+  min: 1
+  max: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  # hosts:
+  #   - host: vnins-api.vnpaytest.local
+  #     paths: [/]
+  #   tls: []
+  # - secretName: example.com-tls
+  #   hosts:
+  #   - example.com
+
+########## Observation ##########
+serviceMonitor:
+  enabled: true
+  additionalLabels: {}
+  interval: 30s
+  honorLabels: false
+  relabellings: {}
