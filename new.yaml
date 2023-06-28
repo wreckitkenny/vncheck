@@ -1,146 +1,75 @@
 app:
-  kind: Deployment
+  kind: statefulset
   replicas: 1
-  annotations: {}
-  pullSecrets: ""
-  hostAliases: {}
+  prometheusScrapePort: 9900
+  healthcheck: 
+    liveness:
+      periodSeconds: 10
+      timeoutSeconds: 20
+      initialDelaySeconds: 90
+      httpGet:
+        path: "/healthz"
+        port: http
+    readiness:
+      periodSeconds: 10
+      timeoutSeconds: 20
+      initialDelaySeconds: 90
+      httpGet:
+        path: "/healthz"
+        port: http
+  podSecurityContext:
+    fsGroup: 2000
   containers:
-    - name: loyalty-nginx
+    - name: ses-backend-api
       image:
-        repository: registry.vnpay.vn/vnpay-ocp/blockchain/mc-loyalty-on/loyalty-nginx
-        tag: t-d4908fdc
-        imagePullPolicy: Always
-      command: ["nginx", "-g", "daemon off;"]
-      args: []
-      ports: [8000]
-      prometheusScrapePort: 9091
-      extraObjectLabels:
-      extraPodLabels:
-        app: loyalty-nginx
-      podAnnotation: {}
-      healthcheck: {}
+        repository: registry.vnpay.vn/vnpay-ocp/nds/ses-pointplus/backend-api
+        tag: t-7c2b66ad
+        imagePullPolicy: IfNotPresent
+      command: ["java"]
+      args: ["-jar", "-Xms257m", "-Xmx512m", "backend-api.jar"]
+      ports: [7003]
+      env:
+        - name: TZ
+          value: Asia/Ho_Chi_Minh
       resources:
         limits:
+          cpu: 2
+          memory: 2Gi
+        requests:
           cpu: 1
           memory: 1Gi
-        requests:
-          cpu: 500m
-          memory: 512Mi
-      env: []
-      envFrom: []
       volumeMounts:
-        - mountPath: /etc/nginx/conf.d/default.conf
-          name: nginx-config
-          subPath: default.conf
-      volumeDevices: {}
-      securityContext: {}
+        - name: backend-api-data
+          mountPath: /home/nds/app/export
+          subPath: export
 
-service: 
-  annotations: {}
+service:
   type: ClusterIP
   svcPort:
-    - 8000:8000
-
-ingress:
-  enabled: false
-  annotations: {}
-  hosts: []
+    - 7003:7003
 
 route:
   enabled: true
-  annotations: {}
   hosts:
-  - host: loyalty-onchain-blc.vnpaytest.local
-    path: /merchant
-    port: 8000
-    tls:
-      enabled: false
-      termination: reencrypt
-      insecureEdgeTerminationPolicy: Redirect
-      certificate: |
-        -----BEGIN CERTIFICATE-----
-        ...
-        -----END CERTIFICATE-----
-      key: |
-        -----BEGIN PRIVATE KEY-----
-        ...
-        -----END PRIVATE KEY-----
-      caCertificate: |
-        -----BEGIN CERTIFICATE-----
-        ...
-        -----END CERTIFICATE-----
-      destinationCACertificate: |
-        -----BEGIN CERTIFICATE-----
-        ...
-        -----END CERTIFICATE-----
+    - host: sesv4backofficeapi.vnpaytest.vn
+      annotations:
+        haproxy.router.openshift.io/timeout: 300s
+      port: 7003
+      tls:
+        enabled: false
+
+volume:
+  - name: backend-api-data
+    persistentVolumeClaim:
+      claimName: pvc-backend-api
 
 pvc:
-  enabled: false
-  claims: []
-
-volume: 
-  - name: nginx-config
-    configMap:
-      name: nginx-config
-
-
-configMap:
-  - name: nginx-config
-    data:
-      default.conf: |
-        server {
-          listen       8000;
-          server_name  loyalty-onchain-blc.vnpaytest.local;
-
-          location / {
-              root   /usr/share/nginx/html;
-              index  index.html index.htm;
-              try_files $uri /index.html;
-          }
-
-          #error_page  404              /404.html;
-
-          # redirect server error pages to the static page /50x.html
-          location /merchant {
-            rewrite /merchant/(.*) /$1  break;
-            proxy_pass http://loyalty-api0.mc-loyalty-on.svc.cluster.local:8000;
-            proxy_read_timeout     60;
-            proxy_connect_timeout  60;
-            proxy_redirect     off;
-            proxy_set_header   Host $host;
-          }
-        }
-
-secret: []
-
-podDisruptionBudget:
-  enabled: false
-  minAvailable: 50%
-  maxUnavailable: 50%
-  selector:
-    app: example
-
-autoscale:
-  enabled: false
-  min: 2
-  max: 6
-  metrics:
-    - type: cpu
-      averageUtilization: 80
-    - type: memory
-      averageUtilization: 80
-
-nodeSelector: {}
-tolerations: []
-affinity: {}
-
-serviceAccount: {}
-
-podSecurityContext: {}
-
-serviceMonitor:
-  enabled: false
-  additionalLabels: {}
-  interval: 30s
-  honorLabels: false
-  relabellings: {}
+  enabled: true
+  claims:
+    - name: pvc-backend-api
+      storageClass: csi-rbd-sc
+      capacity: 1Gi
+      accessMode:
+        - ReadWriteOnce
+      volumeMode: Filesystem
+      volumeClaimTemplates: "false"

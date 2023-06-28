@@ -1,8 +1,8 @@
 image:
-  repository: registry.vnpay.vn/vnpay-ocp/dvtt/vnins/vnins-main-api
+  repository: registry.vnpay.vn/vnpay-ocp/dvtt/vn-film/vn-film-service
   # t= test, m= master, d= dev
   # master enviroment syntax : m-verion
-  tag: t-5de18f16
+  tag: t-0252e7e7
   pullPolicy: IfNotPresent
   pullSecrets: []
 
@@ -11,7 +11,7 @@ app:
   kind: Deployment
   # số lượng pod run
   replicas: 1
-  port: 9662
+  port: 8102
   prometheusScrapePort: 9900
   annotations: {}
   podAnnotations: {}
@@ -19,56 +19,166 @@ app:
     liveness:
       periodSeconds: 10
       timeoutSeconds: 20
-      initialDelaySeconds: 30
+      initialDelaySeconds: 180
       httpGet:
         path: "/healthz"
         port: http
     readiness:
       periodSeconds: 10
       timeoutSeconds: 20
-      initialDelaySeconds: 30
+      initialDelaySeconds: 180
       httpGet:
         path: "/healthz"
         port: http
 
-  args: ["java", "-jar", "-Xms256m", "-Xmx1G", "vnins-main-api.jar"]
+  args: ["java", "-jar", "-Dspring.profiles.active=k8s", "-Xms257m", "-Xmx512m", "vn-film-service.jar"]
 
 resources:
   # Tài nguyên tối đa mà POD có thể được sử dụng
   limits:
-    cpu: 2
-    memory: 1Gi
+    cpu: 750m
+    memory: 1.25Gi
   # tài nguyên tối thiểu để chạy được POD
   requests:
-    cpu: 100m
-    memory: 256Mi
+    cpu: 500m
+    memory: 1Gi
 
 env:
-  - name: PROVIDER_BAO_VIET_URL
-    value: "http://vnins-test-provider-baoviet:9665"
-  - name: REDIS_HOST
-    value: "10.22.7.35"
-  - name: REDIS_PORT
-    value: "6379"
-  - name: REDIS_PASSWORD
-    value: "&$AJ1f671#9%oafnz@"
-  - name: REDIS_DATABASE
-    value: "11"
-  - name: SNOW_FLAKE_MULTI
-    value: "true"
-
-
+  - name: ORACLE_FILM_CONNECT
+    value: "jdbc:oracle:thin:@10.22.19.65:1521/DVTTTEST"
+  - name: ORACLE_FILM_USERNAME
+    value: "VNFILM"
+  - name: ORACLE_FILM_PASSWORD
+    value: "123456"
+  - name: ORACLE_FILM_SCHEMANAME
+    value: "VNFILM"
+  - name: HIKARI_MAX_POOL
+    value: "15"
+  - name: URL_FILM_PROVIDER
+    value: "http://vn-film-provider:8104"
+  - name: URL_SALE_APP
+    value: "https://mbcms.vnpaytest.vn/vouchercms/api"
+  - name: URL_FILM_JOB
+    value: "http://vn-film-job:8111"
+  - name: URL_NORMALIZE_TXN
+    value: "https://normalize-txns.dgl-staging.tekoapis.net"
+  - name: VNPAY_SMS
+    value: "http://10.22.5.169:8081"
+  - name: LIST_EMAIL_NOTI_EMAIL
+    value: "linhtn@vnpay.vn"
+  - name: PHONE_NOTI
+    value: "0943434093"
+  - name: WARNING_EMAILS
+    value: "linhtn@vnpay.vn"
+  - name: ELASTICSEARCH_HOST
+    value: "10.22.7.191"
+  - name: ELASTICSEARCH_PORT
+    value: "9300"
+  - name: ELASTICSEARCH_CLUSTER
+    value: "mb-cluster"
+  - name: LUCKY_DRAW_ACTIVE
+    value: "false"
+  - name: LUCKY_DRAW_MIN
+    value: "10000"
+  - name: LUCKY_DRAW_THRESHOLD
+    value: "500000"
+  - name: LUCKY_DRAW_REBATE_MIN
+    value: "1"
+  - name: LUCKY_DRAW_REBATE_MAX
+    value: "3"
+  - name: LUCKY_DRAW_APP_IDS
+    value: "124,18,39,38,16,14,6,128,20,106,30,13,19,49,31,15,22,24,25,90,122"
+  - name: CONFIG_SECRET_KEY
+    value: "KaPdSgVkYp2s5v8y/B?E(H+MbQeThWmZ"
+  - name: ADMIN_TOKEN
+    value: "Nabati"
+  - name: FILM_API_ACCESS_TOKEN
+    value: "41cbe2068184495beddd31355948b82e"
+  - name: STARLIGHT_SECRET_KEY
+    value: "b055124108234d12b5d73ef2999961c4"
+  - name: CINESTAR_SECRET_KEY
+    value: "a8fa1289de5c4a65ad14fefb01fbe589"
+  - name: BETA_SALE_CHANNEL
+    value: "88C8D995-2799-4D0E-90C8-D0B8848938DE"
+  - name: HOST_SWAGGER
+    value: "https://ecos-vn-film-app-api.vnpaytest.vn"
+  - name: VNPAY_SMS_PARTNER_CODE
+    value: "950448"
+  - name: VNPAY_SMS_KEYWORD
+    value: "ECOS_VNBOAT"
+  - name: VNPAY_SMS_SERCRET_KEY
+    value: "2a1ed5198b754b4da80b418ffea5e678"
+  - name: VNPAY_SMS_BRAND_NAME
+    value: "VNPAY"
+  - name: SEND_OTT_URL
+    value: "https://vnticket.vnpaytest.vn/vnticket/ott/sendott"
+  - name: BANKS_NOT_SUPPORT_OTT
+    value: "970432,970437,970435,970445,970430,970422,970418"
+  - name: SEND_SMS_URL
+    value: "https://smsgw.vnpaytest.vn/smsgw/sendSms"
+  - name: SMS_KEYWORD
+    value: "ECOS_VNBOAT"
+  - name: SMS_PARTNER_CODE
+    value: "950042"
+  - name: SMS_SECRET_KEY
+    value: "2a1ed5198b754b4da80b418ffea5e678"
+  - name: SEND_EMAIL_URL
+    value: "https://vnticket.vnpaytest.vn/vnticket/email/vbanemailamz/VbanEmailSvc.asmx?wsdl02"
+  - name: NORMALIZE_API_KEY
+    value: "d85064bc8ff77bb9a3c81d57357d0f01"
+  - name: DIGICORE_TOKEN
+    value: "c191f7c7d6dc9d64d9d1dec07b4bcda0"
+  - name: OPTIONAL_CLIENT_ID
+    value: "111.111.111.114"
+  - name: MANAGEMENT_SERVER_PORT
+    value: "9900"
+  - name: APP_ID_V2_LIST
+    value: "22,106,90,23,122,14,115,18,124,17,128,129,131"
+  - name: M_SACOMBANK_APP_ID
+    value: "13"
+  - name: JAEGER_AGENT_HOST
+    value: "localhost"
+  - name: JAEGER_AGENT_PORT
+    value: "6831"
+  - name: JAEGER_SAMPLING_RATE
+    value: "0.001"
+  - name: BETA_SECRET_KEY
+    value: "BETA@123VNPAY"
+  - name: APP_ID_V2_V3_BUG_FIX_IOS
+    value: "131"
+  - name: MERCHANT_APP_CODE
+    value: "MERCHANT_APP"
+  - name: MERCHANT_APP_OTT_CODE
+    value: "908421"
+  - name: MERCHANT_APP_TYPE
+    value: "10532004"
+  - name: MERCHANT_APP_GROUP_TYPE
+    value: "G_NOTIFY"
+  - name: MERCHANT_APP_SOURCE
+    value: "SDK_FILM"
+  - name: MERCHANT_APP_SECRET_KEY
+    value: "87630dfcd7d9488cb7ea42eae1a40dfe"
+  - name: MERCHANT_APP_HMAC_KEY
+    value: "46714a18c8c94947a11ec149c7415aa1"
+  - name: MERCHANT_APP_OTT_URL
+    value: "http://10.22.17.185:9040/v1/api/sendMessage"
+  - name: "MERCHANT_APP_RAW_TITLE"
+    value: "Đặt vé xem phim"
+  - name: CONFIG_WAREHOUSE_URL
+    value: "http://10.22.18.211:8088"
+  - name: CONFIG_WAREHOUSE_HMAC_KEY
+    value: "p3s6v9y$B&E)H@McQfTjWnZr4t7w!z%C"
 
 ########## Networking ###########
 service:
   type: ClusterIP
-  port: 9662
+  port: 8102
   annotations: {}
 
 autoscaling:
   enabled: false
-  min: 1
-  max: 2
+  min: 2
+  max: 5
   metrics:
     - type: Resource
       resource:
@@ -83,15 +193,14 @@ autoscaling:
           type: Utilization
           averageUtilization: 80
 
-
 ingress:
-  enabled: false
+  enabled: true
   annotations: {}
   # kubernetes.io/ingress.class: nginx
   # kubernetes.io/tls-acme: "true"
-  # hosts:
-  #   - host: vnins-api.vnpaytest.local
-  #     paths: [/]
+  hosts:
+    - host: ecos-vn-film-app-api.vnpaytest.local
+      paths: [/]
   #   tls: []
   # - secretName: example.com-tls
   #   hosts:

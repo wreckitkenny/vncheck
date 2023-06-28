@@ -1,7 +1,7 @@
 import yaml, sys, argparse, json, jsonschema
 
 ### ENV validation Functions
-def checkDup(list):
+def check_duplicate(list):
     setOfName = set()
     listOfName = []
     for n in list:
@@ -16,7 +16,7 @@ def validate(file):
             try:
                 env = yaml.load(f, Loader=yaml.FullLoader)['env']
                 name = [env[i]['name'] for i in range(len(env))]
-                isDup = checkDup(name)
+                isDup = check_duplicate(name)
                 return isDup
             except:
                 return []
@@ -24,18 +24,27 @@ def validate(file):
         return []
 
 ### Schema validation Functions
-def validateValue(valueFile, schemaFile):
+def validate_value(valueFile, schemaDir):
+    print("[!] Checking: {}".format(valueFile))
+    with open(valueFile) as valueFile:
+        valueContent = yaml.load(valueFile, Loader=yaml.FullLoader)
+        # Detect helm generic version
+        if "image" not in list(valueContent.keys()):
+            print("--> [+] Version 1.0.0 is detected.")
+            with open(schemaDir + "/newSchema.json") as schemaFile:
+                schemaContent = json.load(schemaFile)
+        else:
+            print("--> [+] Version <1.0.0 is detected.")
+            with open(schemaDir + "/oldSchema.json") as schemaFile:
+                schemaContent = json.load(schemaFile)
     try:
-        print("Checking: {}".format(valueFile))
-        with open(valueFile) as valueFile, open(schemaFile) as schemaFile:
-            valueContent = yaml.load(valueFile, Loader=yaml.FullLoader)
-            schemaContent = json.load(schemaFile)
-            jsonschema.validate(instance=valueContent, schema=schemaContent)
-            return True
+        jsonschema.validate(instance=valueContent, schema=schemaContent)
+        print("--> [+] VALIDATED!!!")
+        return True
     except jsonschema.exceptions.ValidationError as error:
-        return error
+        return "--> [-] Failed to validate: {}".format(error)
     except FileNotFoundError:
-        print("SKIPPED - File {} has not been available to check.".format(valueFile))
+        print("--> [-] File {} has not been available to check.".format(valueFile))
         return True
 
 if __name__ == "__main__":
@@ -44,7 +53,7 @@ if __name__ == "__main__":
     epilog="""Author: _wiky""")
     parser.add_argument('--check-env', action="store_true", help='enable to check ENV variables in Helm value file')
     parser.add_argument('--check-schema', action="store_true", help='enable to check Helm value file based on schema')
-    parser.add_argument('--schema-file', help='path to a schema file')
+    parser.add_argument('--schema-directory', help='schema directory')
     parser.add_argument('--value-file', help='path to a Helm value file')
     parser.add_argument('--exclude', help='exclude files not needed to check')
     args=parser.parse_args()
@@ -61,9 +70,8 @@ if __name__ == "__main__":
 
     if args.check_schema == True:
         valueFile = args.value_file
-        schemaFile = args.schema_file
-        if args.exclude:
-            if valueFile in args.exclude.split(','): valueFile = ""
+        schemaDir = args.schema_directory
+        if args.exclude and valueFile in args.exclude.split(','): valueFile = ""
         if valueFile != "":
-            valueValidation = validateValue(valueFile, schemaFile)
+            valueValidation = validate_value(valueFile, schemaDir)
             if valueValidation != True: sys.exit(valueValidation)
