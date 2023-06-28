@@ -5,13 +5,17 @@ VNCheck is a Python tool checking Helm value environments and syntax.
 
 #
 ```bash
-.
-├── checkValue.py
+vncheck/
 ├── Dockerfile
+├── LICENSE
+├── newSchema.json
+├── oldSchema.json
 ├── README.md
 ├── requirements.txt
-├── schema.py
-└── test.yaml
+├── VERSION
+└── vncheck.py
+
+0 directories, 8 files
 ```
 #
 ## Requirements
@@ -28,18 +32,17 @@ pip3 install -r requirements.txt
 #
 ## Usage
 ```python
-usage: checkValue.py [-h] [--check-env] [--check-schema] [--schema-file SCHEMA_FILE] [--value-file VALUE_FILE]
+usage: vncheck.py [-h] [--check-env] [--check-schema] [--schema-directory SCHEMA_DIRECTORY] [--value-file VALUE_FILE] [--exclude EXCLUDE]
 
 A tool to validate Helm value file
 
 options:
-  -h, --help            show this help message and exit
-  --check-env           enable to check ENV variables in Helm value file
-  --check-schema        enable to check Helm value file based on schema
-  --schema-file SCHEMA_FILE
-                        path to a schema file
-  --value-file VALUE_FILE
-                        path to a Helm value file
+  -h, --help                            show this help message and exit
+  --check-env                           enable to check ENV variables in Helm value file
+  --check-schema                        enable to check Helm value file based on schema
+  --schema-directory SCHEMA_DIRECTORY   schema directory
+  --value-file VALUE_FILE               path to a Helm value file
+  --exclude EXCLUDE                     exclude files not needed to check
 
 Author: _wiky
 ```
