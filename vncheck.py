@@ -10,22 +10,21 @@ def check_duplicate(list):
     return listOfName
 
 def validate(file):
-    try:
-        print("Checking the file: {}".format(file))
-        with open(file, 'r') as f:
-            try:
-                env = yaml.load(f, Loader=yaml.FullLoader)['env']
-                name = [env[i]['name'] for i in range(len(env))]
-                isDup = check_duplicate(name)
-                return isDup
-            except:
-                return []
-    except:
-        return []
+    print("[!] Checking duplicated env: {}".format(file))
+    with open(file, 'r') as f:
+        valueContent = yaml.load(f, Loader=yaml.FullLoader)
+        if "image" not in list(valueContent.keys()):
+            env = []
+            for container in valueContent['app']['containers']: env += container['env']
+        else:
+            env = valueContent['env']
+        name = [env[i]['name'] for i in range(len(env))]
+        isDup = check_duplicate(name)
+        return isDup
 
 ### Schema validation Functions
 def validate_value(valueFile, schemaDir):
-    print("[!] Checking: {}".format(valueFile))
+    print("[!] Check schema: {}".format(valueFile))
     with open(valueFile) as valueFile:
         valueContent = yaml.load(valueFile, Loader=yaml.FullLoader)
         # Detect helm generic version
@@ -60,18 +59,17 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 1: parser.print_help()
 
-    if args.check_env == True:
-        # try:
-        isDuplicated = validate(args.value_file)
+    valueFile = args.value_file
+    if args.exclude and valueFile.split('/')[-1] in args.exclude.split(','):
+        print("[!] Nothing to check")
+        valueFile = ""
+    if valueFile != "" and args.check_env == True:
+        isDuplicated = validate(valueFile)
         if isDuplicated != None and len(isDuplicated) != 0:
-            sys.exit("{} duplicated ENV(s) {} in file [{}].".format(len(isDuplicated), isDuplicated, args.value_file))
-        # except IndexError:
-        #     print("Help: {} example.yaml".format(sys.argv[0]))
-
-    if args.check_schema == True:
-        valueFile = args.value_file
+            sys.exit("--> [-] Found {} duplicated ENV(s) {} in file [{}].".format(len(isDuplicated), isDuplicated, valueFile))
+        else:
+            print("--> [+] Everything OK")
+    if valueFile != "" and args.check_schema == True:
         schemaDir = args.schema_directory
-        if args.exclude and valueFile in args.exclude.split(','): valueFile = ""
-        if valueFile != "":
-            valueValidation = validate_value(valueFile, schemaDir)
-            if valueValidation != True: sys.exit(valueValidation)
+        valueValidation = validate_value(valueFile, schemaDir)
+        if valueValidation != True: sys.exit(valueValidation)
