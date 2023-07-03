@@ -13,13 +13,17 @@ def validate(file):
     print("[!] Checking duplicated env: {}".format(file))
     with open(file, 'r') as f:
         valueContent = yaml.load(f, Loader=yaml.FullLoader)
-        if "image" not in list(valueContent.keys()):
-            env = []
-            for container in valueContent['app']['containers']: env += container['env']
-        else:
-            env = valueContent['env']
-        name = [env[i]['name'] for i in range(len(env))]
-        isDup = check_duplicate(name)
+        try:
+            if "image" not in list(valueContent.keys()):
+                isDup = []
+                for container in valueContent['app']['containers']:
+                    name = [container['env'][i]['name'] for i in range(len(container['env']))]
+                    isDup += check_duplicate(name)
+            else:
+                name = [valueContent['env'][i]['name'] for i in range(len(valueContent['env']))]
+                isDup = check_duplicate(name)
+        except KeyError:
+            print("--> [+] Yaml node 'env' not found")
         return isDup
 
 ### Schema validation Functions
