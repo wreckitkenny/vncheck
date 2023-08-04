@@ -59,14 +59,24 @@ if __name__ == "__main__":
     parser.add_argument('--schema-directory', help='schema directory')
     parser.add_argument('--value-file', help='path to a Helm value file')
     parser.add_argument('--exclude', help='exclude files not needed to check')
+    parser.add_argument('--middleware', help='define middleware application not needed to check')
     args=parser.parse_args()
 
     if len(sys.argv) == 1: parser.print_help()
 
     valueFile = args.value_file
+
+    # Check excluded files
     if args.exclude and valueFile.split('/')[-1] in args.exclude.split(','):
         print("[!] Nothing to check")
         valueFile = ""
+
+    # Check middleware helm value files
+    if args.middleware:
+        for m in args.middleware.split(','):
+            if m in valueFile: valueFile = ""
+
+    ## Main check
     if valueFile != "" and args.check_env == True:
         isDuplicated = validate(valueFile)
         if isDuplicated != None and len(isDuplicated) != 0:
