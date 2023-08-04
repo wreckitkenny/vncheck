@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.3] | 2023-08-04
+### Added/Removed
+- Added checking Middleware helm value files
+### Changed
+### Fixed
+
 ## [1.0.2] | 2023-07-03
 ### Added/Removed
 - Added an exception handle when YAML node 'env' not input
