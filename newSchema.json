@@ -1,0 +1,209 @@
+{
+  "type": "object",
+  "properties": {
+    "app": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["deployment", "Deployment", "statefulSet", "StatefulSet", "statefulset"] },
+        "replicas": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "annotations": { "type": "object" },
+        "extraObjectLabels": { "type": "object" },
+        "extraPodLabels": { "type": "object" },
+        "podAnnotations": { "type": "object" },
+        "podSecurityContext": { "type": "object" },
+        "pullSecrets": { "type": "string" },
+        "hostAliases": { "type": "array" },
+        "prometheusScrapePort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "terminationGracePeriodSeconds": { "type": "integer" },
+        "containers": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "properties": {
+                "name": { "type": "string" },
+                "image": {
+                  "type": "object",
+                  "properties": {
+                    "repository": { "type": "string", "pattern": "^([a-zA-Z0-9]+.){2}[a-zA-Z0-9]+(\/([a-zA-Z0-9]+(-|_)?)+)+$" },
+                    "tag": { "type": "string", "pattern": "^(t-)?(d-)?(m-)?(([0-9]+.)+[0-9]+(-)?)?([a-z0-9]{8})?$" },
+                    "pullPolicy": { "type": "string", "enum": ["IfNotPresent", "Always", "Never"] }
+                  },
+                  "required": ["repository", "tag"]
+                },
+                "command": { "type": "array" },
+                "args": { "type": "array" },
+                "lifecycle": { "type": "object" },
+                "ports": { "type": "array" },
+                "healthcheck": {
+                  "type": "object",
+                  "properties": {
+                    "liveness": {
+                      "type": "object",
+                      "properties": {
+                        "periodSeconds": { "type": "integer" },
+                        "timeoutSeconds": { "type": "integer" },
+                        "initialDelaySeconds": { "type": "integer" },
+                        "httpGet": {
+                          "type": "object",
+                          "properties": {
+                            "path": { "type": "string" },
+                            "port": { "type": ["integer", "string"] }
+                          }
+                        }
+                      }
+                    },
+                    "readiness":{
+                      "type": "object",
+                      "properties": {
+                        "periodSeconds": { "type": "integer" },
+                        "timeoutSeconds": { "type": "integer" },
+                        "initialDelaySeconds": { "type": "integer" },
+                        "httpGet": {
+                          "type": "object",
+                          "properties": {
+                            "path": { "type": "string" },
+                            "port": { "type": ["integer", "string"] }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "resources": {
+                  "type": "object",
+                  "properties": {
+                    "limits": {
+                      "type": "object",
+                      "properties": {
+                        "cpu": { "type": ["string", "number"], "enum": ["100m", "250m", "500m", "750m", 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4] },
+                        "memory": { "type": "string", "enum": ["128Mi", "256Mi", "512Mi", "768Mi", "1Gi", "1.25Gi", "1.5Gi", "1.75Gi", "2Gi", "2.25Gi", "2.5Gi", "2.75Gi", "3Gi", "3.25Gi", "3.5Gi", "3.75Gi", "4Gi", "6Gi", "8Gi"] }
+                      }
+                    },
+                    "requests": {
+                      "type": "object",
+                      "properties": {
+                        "cpu": { "type": ["string", "number"], "enum": ["100m", "250m", "500m", "750m", 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4] },
+                        "memory": { "type": "string", "enum": ["128Mi", "256Mi", "512Mi", "768Mi", "1Gi", "1.25Gi", "1.5Gi", "1.75Gi", "2Gi", "2.25Gi", "2.5Gi", "2.75Gi", "3Gi", "3.25Gi", "3.5Gi", "3.75Gi", "4Gi", "6Gi", "8Gi"] }
+                      }
+                    }
+                  }
+                },
+                "env": { "type": "array" },
+                "envFrom": { "type": "array" },
+                "volumeMounts": { "type": "array" },
+                "volumeDevices": { "type": "array" },
+                "securityContext": { "type": "object" }
+              },
+              "required": ["name", "image", "resources", "ports"]
+            }
+          ]
+        }
+      },
+      "required": ["kind", "replicas"]
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "annotations": { "type": "object" },
+        "hosts": { "type": "array", "items": { "type": "object" } }
+      },
+      "if": {
+        "properties": {
+          "enabled": { "const": true }
+        }
+      },
+      "then": {
+        "required": ["hosts"],
+        "properties": {
+          "hosts": {
+            "prefixItems": [
+              {
+                "properties": {
+                  "host": { "type": "string" },
+                  "paths": { "type": "array" }
+                },
+                "required": ["host", "paths"]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "hosts": { "type": "array", "items": { "type": "object" } }
+      },
+      "if": {
+        "properties": {
+          "enabled": { "const": true }
+        }
+      },
+      "then": {
+        "required": ["hosts"],
+        "properties": {
+          "hosts": {
+            "prefixItems": [
+              {
+                "properties": {
+                  "host": { "type": "string" },
+                  "annotations": { "type": "object"},
+                  "path": { "type": "string" },
+                  "service": { "type": "string" },
+                  "port": { "type": "integer" },
+                  "tls": {"type":"object"}
+                },
+                "required": ["host", "port"]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"] },
+        "serviceNames": { "type": "array" },
+        "svcPort": { "type": "array" }
+      }
+    },
+    "autoscale": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "min": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "max": { "type": "integer", "minimum": 2, "maximum": 16 },
+        "metrics": { "type": "array", "items": { "type": "object" } }
+      },
+      "if": {
+        "properties": { "enabled": { "const": true } }
+      },
+      "then": {
+        "required": ["min", "max", "metrics"],
+        "properties": {
+          "metrics": {
+            "prefixItems": [
+              {
+                "properties": {
+                  "type": { "type": "string" },
+                  "averageUtilization": { "type": "integer" }
+                },
+                "required": ["type", "averageUtilization"]
+              }
+            ]
+          }
+        }
+      }
+
+    },
+    "serviceMonitor": { "type": "object" },
+    "serviceAccount": { "type": "object" },
+    "volume": { "type": "array" },
+    "configMap": { "type": "array" },
+    "secret": { "type": "array" }
+  },
+  "required": ["app", "service"]
+}
