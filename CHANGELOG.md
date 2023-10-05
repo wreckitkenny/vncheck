@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.4] | 2023-10-05
+### Added/Removed
+- Fixed UnboundLocalError when yaml node 'env' not found
+### Changed
+### Fixed
+
 ## [1.0.3] | 2023-08-04
 ### Added/Removed
 - Added checking Middleware helm value files
