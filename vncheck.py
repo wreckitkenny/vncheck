@@ -12,10 +12,10 @@ def check_duplicate(list):
 def validate(file):
     print("[!] Checking duplicated env: {}".format(file))
     with open(file, 'r') as f:
+        isDup = []
         valueContent = yaml.load(f, Loader=yaml.FullLoader)
         try:
             if "image" not in list(valueContent.keys()):
-                isDup = []
                 for container in valueContent['app']['containers']:
                     name = [container['env'][i]['name'] for i in range(len(container['env']))]
                     isDup += check_duplicate(name)
