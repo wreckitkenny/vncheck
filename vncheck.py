@@ -31,8 +31,13 @@ def validate_value(valueFile, schemaDir):
     print("[!] Check schema: {}".format(valueFile))
     with open(valueFile) as valueFile:
         valueContent = yaml.load(valueFile, Loader=yaml.FullLoader)
+        # Detect helmfile
+        if "releases" in list(valueContent.keys()):
+            print("--> [+] Helmfile is detected.")
+            with open(schemaDir + "/helmfile.json") as schemaFile:
+                schemaContent = json.load(schemaFile)
         # Detect helm generic version
-        if "image" not in list(valueContent.keys()):
+        elif "image" not in list(valueContent.keys()):
             print("--> [+] Version 1.0.0 is detected.")
             with open(schemaDir + "/newSchema.json") as schemaFile:
                 schemaContent = json.load(schemaFile)

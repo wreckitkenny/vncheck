@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "releases": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "properties": {
+            "name": { "type": "string" },
+            "namespace": { "type": "string" },
+            "chart": { "type": "string" },
+            "version": { "type": "string" },
+            "values": {
+              "type": ["string", "array"],
+              "prefixItems": [
+                {
+                  "properties": {
+                    "fullnameOverride": { "type": "string" },
+                    "nameOverride": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          },
+          "required": [ "name", "namespace", "chart", "version", "values" ]
+        }
+      ]
+    }
+  },
+  "required": ["releases"]
+}

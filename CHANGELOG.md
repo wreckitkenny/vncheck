@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.5] | 2024-0205
+### Added/Removed
+- Added schema validation for helmfile.yaml
+### Changed
+### Fixed
+
 ## [1.0.4] | 2023-10-05
 ### Added/Removed
 - Fixed UnboundLocalError when yaml node 'env' not found
