@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [1.0.5] | 2024-0205
+## [1.0.5] | 2024-02-05
 ### Added/Removed
 - Added schema validation for helmfile.yaml
 ### Changed
